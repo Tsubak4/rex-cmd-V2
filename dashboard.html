@@ -1,0 +1,1796 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rex's Diner - Admin V2</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --marine-deep: #0a0a0a;
+        --marine-medium: #1a1a2e;
+        --marine-light: #16213e;
+        --neon-cyan: #00ffff;
+        --neon-red: #ff0055;
+        --neon-red-light: #ff3366;
+        --white: #ffffff;
+        --dark-bg: #0a0a0a;
+        --neon-green: #00ff88;
+        --neon-yellow: #ffcc00;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: url("assets/rex.png") center/cover fixed no-repeat;
+        color: #fff;
+        position: relative;
+        overflow-x: hidden;
+        border: 3px solid var(--neon-cyan);
+        box-shadow:
+          0 0 20px var(--neon-cyan),
+          inset 0 0 20px var(--neon-cyan);
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.65);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+          linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 0, 85, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      nav {
+        background: rgba(10, 10, 10, 0.85);
+        backdrop-filter: blur(10px);
+        border-bottom: 3px solid var(--neon-cyan);
+        box-shadow: 0 5px 25px var(--neon-cyan);
+        padding: 1rem 2rem;
+        position: fixed;
+        width: 100%;
+        z-index: 100;
+      }
+
+      .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        animation: neonPulse 2s infinite ease-in-out;
+      }
+
+      .logo img {
+        height: 50px;
+        width: auto;
+        filter: drop-shadow(0 0 10px var(--neon-cyan));
+        transition: all 0.3s ease;
+      }
+
+      .logo img:hover {
+        filter: drop-shadow(0 0 20px var(--neon-cyan));
+        transform: scale(1.05);
+      }
+
+      @keyframes neonPulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 5px var(--neon-cyan));
+        }
+        50% {
+          filter: drop-shadow(0 0 20px var(--neon-cyan));
+        }
+      }
+
+      .logo-text {
+        font-size: 2rem;
+        font-weight: 800;
+        font-family: "Orbitron", sans-serif;
+        background: linear-gradient(
+          to bottom,
+          var(--neon-cyan) 0%,
+          var(--neon-red) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 2px;
+        position: relative;
+      }
+
+      .logo-text::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--neon-cyan),
+          var(--neon-red),
+          transparent
+        );
+        box-shadow: 0 0 20px var(--neon-cyan);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+        position: relative;
+        text-shadow: 0 0 10px var(--neon-cyan);
+      }
+
+      .nav-links a::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: var(--neon-red);
+        box-shadow: 0 0 20px var(--neon-red);
+        transition: width 0.3s ease;
+      }
+
+      .nav-links a:hover::before {
+        width: 70%;
+      }
+
+      .nav-links a:hover {
+        text-shadow:
+          0 0 20px var(--neon-cyan),
+          0 0 40px var(--neon-red);
+      }
+
+      .logout-btn {
+        background: rgba(255, 0, 85, 0.1) !important;
+        border: 1px solid var(--neon-red) !important;
+        box-shadow: 0 0 15px var(--neon-red) !important;
+        cursor: pointer;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 0, 85, 0.2) !important;
+        box-shadow: 0 0 25px var(--neon-red) !important;
+      }
+
+      .logout-btn i {
+        margin-right: 8px;
+      }
+
+      main {
+        flex: 1;
+        padding: 6rem 2rem 4rem;
+        position: relative;
+        z-index: 10;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .dashboard-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .dashboard-header h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(
+          to bottom,
+          var(--neon-cyan) 0%,
+          var(--neon-red) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px var(--neon-cyan);
+      }
+
+      .dashboard-header p {
+        color: var(--neon-cyan);
+        font-size: 1.1rem;
+        text-shadow: 0 0 10px var(--neon-cyan);
+      }
+
+      .admin-info {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: rgba(0, 255, 255, 0.1);
+        border: 1px solid var(--neon-cyan);
+        border-radius: 10px;
+        box-shadow: 0 0 20px var(--neon-cyan);
+        backdrop-filter: blur(5px);
+        font-size: 1.2rem;
+      }
+
+      .tab-section {
+        background: rgba(10, 10, 10, 0.6);
+        backdrop-filter: blur(10px);
+        border: 2px solid var(--neon-cyan);
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 30px var(--neon-cyan);
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .tab-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.2rem 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+      }
+
+      .tab-header:hover {
+        background: rgba(0, 255, 255, 0.05);
+      }
+
+      .tab-header h2 {
+        font-family: "Orbitron", sans-serif;
+        background: linear-gradient(
+          to bottom,
+          var(--neon-cyan) 0%,
+          var(--neon-red) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.5rem;
+        text-shadow: 0 0 15px var(--neon-cyan);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 0;
+      }
+
+      .tab-arrow {
+        font-size: 1.5rem;
+        color: var(--neon-cyan);
+        transition: transform 0.3s ease;
+        text-shadow: 0 0 10px var(--neon-cyan);
+      }
+
+      .tab-section.open .tab-arrow {
+        transform: rotate(180deg);
+      }
+
+      .tab-content {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+          padding 0.5s ease;
+        padding: 0 2rem;
+      }
+
+      .tab-section.open .tab-content {
+        max-height: 4000px;
+        padding: 0 2rem 2rem 2rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group {
+        position: relative;
+      }
+
+      .form-group label {
+        display: block;
+        font-family: "Orbitron", sans-serif;
+        color: var(--neon-cyan);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px var(--neon-cyan);
+      }
+
+      .input-container {
+        position: relative;
+      }
+
+      .input-container i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--neon-cyan);
+        font-size: 1.1rem;
+        text-shadow: 0 0 5px var(--neon-cyan);
+        z-index: 2;
+      }
+
+      .input-container input,
+      .input-container textarea,
+      .input-container select {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        background: rgba(10, 10, 10, 0.8);
+        border: 2px solid var(--neon-cyan);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.9rem;
+        font-family: "Roboto", sans-serif;
+        transition: all 0.3s ease;
+        outline: none;
+      }
+
+      .input-container textarea {
+        resize: vertical;
+        min-height: 80px;
+        padding: 12px 12px 12px 40px;
+      }
+
+      .input-container select {
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .input-container select option {
+        background: #0a0a0a;
+        color: #fff;
+      }
+
+      .input-container input:focus,
+      .input-container textarea:focus,
+      .input-container select:focus {
+        border-color: var(--neon-red);
+        background: rgba(10, 10, 10, 0.9);
+        box-shadow: 0 0 15px var(--neon-red);
+      }
+
+      .input-container input::placeholder,
+      .input-container textarea::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .btn-add {
+        width: 100%;
+        padding: 14px;
+        background: rgba(0, 255, 255, 0.1);
+        border: 2px solid var(--neon-cyan);
+        border-radius: 8px;
+        color: #fff;
+        font-family: "Orbitron", sans-serif;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-shadow: 0 0 10px var(--neon-cyan);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 20px var(--neon-cyan);
+      }
+
+      .btn-add:hover {
+        background: rgba(255, 0, 85, 0.2);
+        box-shadow: 0 0 25px var(--neon-red);
+        border-color: var(--neon-red);
+        transform: translateY(-2px);
+      }
+
+      .btn-add::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 0, 85, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .btn-add:hover::before {
+        left: 100%;
+      }
+
+      .table-responsive {
+        overflow-x: auto;
+        margin-top: 1rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      th {
+        font-family: "Orbitron", sans-serif;
+        color: var(--neon-cyan);
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 2px solid var(--neon-cyan);
+        text-shadow: 0 0 10px var(--neon-cyan);
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        color: #fff;
+      }
+
+      tr:hover {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      .btn-delete {
+        background: transparent;
+        border: 2px solid var(--neon-red);
+        color: var(--neon-red);
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.85rem;
+        text-shadow: 0 0 5px var(--neon-red);
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        margin-right: 0.5rem;
+        white-space: nowrap;
+      }
+
+      .btn-delete:hover {
+        background: var(--neon-red);
+        color: #fff;
+        box-shadow: 0 0 20px var(--neon-red);
+        transform: translateY(-2px);
+      }
+
+      .btn-edit {
+        background: transparent;
+        border: 2px solid var(--neon-yellow);
+        color: var(--neon-yellow);
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.85rem;
+        text-shadow: 0 0 5px var(--neon-yellow);
+        box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+        white-space: nowrap;
+      }
+
+      .btn-edit:hover {
+        background: var(--neon-yellow);
+        color: #0a0a0a;
+        box-shadow: 0 0 20px var(--neon-yellow);
+        transform: translateY(-2px);
+      }
+
+      .text-ellipsis {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+      }
+
+      .topic-id-badge {
+        background: rgba(0, 255, 255, 0.15);
+        border: 1px solid var(--neon-cyan);
+        border-radius: 20px;
+        padding: 0.3rem 0.8rem;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.8rem;
+        color: var(--neon-cyan);
+        display: inline-block;
+      }
+
+      .message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        font-family: "Roboto", sans-serif;
+        font-size: 0.9rem;
+        display: none;
+        border: 2px solid;
+      }
+
+      .message.success {
+        display: block;
+        background: rgba(0, 255, 255, 0.1);
+        border-color: var(--neon-cyan);
+        color: #fff;
+        text-shadow: 0 0 5px var(--neon-cyan);
+      }
+
+      .message.error {
+        display: block;
+        background: rgba(255, 0, 85, 0.1);
+        border-color: var(--neon-red);
+        color: var(--neon-red-light);
+        text-shadow: 0 0 5px rgba(255, 0, 85, 0.5);
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(0, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--neon-cyan);
+        animation: spin 1s ease-in-out infinite;
+        margin: 2rem auto;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal-container {
+        position: relative;
+        z-index: 2001;
+        width: 100%;
+        max-width: 550px;
+        padding: 30px;
+        background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+        border: 3px solid var(--neon-cyan);
+        border-radius: 15px;
+        box-shadow:
+          0 20px 40px rgba(0, 0, 0, 0.7),
+          0 0 30px var(--neon-cyan);
+        transform: scale(0.9);
+        animation: modalAppear 0.3s ease forwards;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      @keyframes modalAppear {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: transparent;
+        border: 2px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px var(--neon-cyan);
+      }
+
+      .modal-close:hover {
+        background: var(--neon-red);
+        color: #fff;
+        transform: rotate(90deg);
+        box-shadow: 0 0 25px var(--neon-red);
+        border-color: var(--neon-red);
+      }
+
+      .modal-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 1.5rem;
+        color: #fff;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
+        background: linear-gradient(
+          to bottom,
+          var(--neon-cyan) 0%,
+          var(--neon-red) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .modal-btn-row {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .modal-btn-row button {
+        flex: 1;
+        padding: 12px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        border: 2px solid var(--neon-cyan);
+        background: rgba(0, 255, 255, 0.1);
+        color: #fff;
+        text-shadow: 0 0 10px var(--neon-cyan);
+        box-shadow: 0 0 20px var(--neon-cyan);
+      }
+
+      .modal-btn-row button:hover {
+        background: rgba(255, 0, 85, 0.2);
+        box-shadow: 0 0 25px var(--neon-red);
+        border-color: var(--neon-red);
+        transform: translateY(-2px);
+      }
+
+      footer {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        z-index: 20;
+        border-top: 3px solid var(--neon-cyan);
+        box-shadow: 0 -5px 25px var(--neon-cyan);
+      }
+
+      .footer-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .copyright {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        text-shadow: 0 0 15px var(--neon-cyan);
+        letter-spacing: 1px;
+        text-align: center;
+      }
+
+      .glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(
+          circle,
+          rgba(0, 255, 255, 0.15) 0%,
+          rgba(255, 0, 85, 0.05) 50%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 2;
+        filter: blur(50px);
+      }
+
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .table-responsive {
+          font-size: 0.85rem;
+        }
+
+        th,
+        td {
+          padding: 0.6rem;
+        }
+
+        .btn-delete,
+        .btn-edit {
+          padding: 0.3rem 0.6rem;
+          font-size: 0.75rem;
+          margin-bottom: 0.3rem;
+        }
+
+        .logo-text {
+          font-size: 1.2rem;
+        }
+
+        .logo img {
+          height: 35px;
+        }
+
+        .modal-container {
+          margin: 15px;
+          padding: 20px;
+        }
+
+        .tab-header {
+          padding: 1rem;
+        }
+
+        .tab-header h2 {
+          font-size: 1.2rem;
+        }
+
+        .tab-content {
+          padding: 0 1rem;
+        }
+
+        .tab-section.open .tab-content {
+          padding: 0 1rem 1.5rem 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-container">
+        <div class="logo">
+          <img src="assets/logo.png" alt="Rex's Diner Logo" />
+          <span class="logo-text">REX'S DINER</span>
+        </div>
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li>
+            <a href="#" class="logout-btn" id="logoutBtn"
+              ><i class="fas fa-sign-out-alt"></i> Deconnexion</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="glow"></div>
+
+    <main>
+      <div class="dashboard-header">
+        <h1>PANEL ADMINISTRATEUR</h1>
+        <p>Gestion complete du Rex's Diner</p>
+      </div>
+
+      <div id="notification" class="message" style="display: none"></div>
+
+      <div class="admin-info" id="adminInfo">
+        <i class="fas fa-user-shield"></i> Verification des droits
+        administrateur...
+      </div>
+
+      <!-- ENTREPRISES -->
+      <div class="tab-section open" id="tabCompanies">
+        <div class="tab-header" onclick="toggleTab('tabCompanies')">
+          <h2><i class="fas fa-building"></i> GESTION DES ENTREPRISES</h2>
+          <i class="fas fa-chevron-down tab-arrow"></i>
+        </div>
+        <div class="tab-content">
+          <div
+            class="tab-section open"
+            id="subTabAddCompany"
+            style="margin-bottom: 1.5rem"
+          >
+            <div
+              class="tab-header"
+              onclick="toggleTab('subTabAddCompany')"
+              style="padding: 0.8rem 1.5rem"
+            >
+              <h2 style="font-size: 1.2rem">
+                <i class="fas fa-plus-circle"></i> AJOUTER UNE ENTREPRISE
+              </h2>
+              <i class="fas fa-chevron-down tab-arrow"></i>
+            </div>
+            <div class="tab-content">
+              <form id="addCompanyForm">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="companyName">Nom de l'entreprise</label>
+                    <div class="input-container">
+                      <i class="fas fa-building"></i>
+                      <input
+                        type="text"
+                        id="companyName"
+                        placeholder="Nom de l'entreprise"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-container">
+                      <i class="fas fa-envelope"></i>
+                      <input
+                        type="email"
+                        id="email"
+                        placeholder="contact@entreprise.com"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <div class="input-container">
+                      <i class="fas fa-lock"></i>
+                      <input
+                        type="password"
+                        id="password"
+                        placeholder="........"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="discordTopicId">ID Topic Discord (Forum)</label>
+                    <div class="input-container">
+                      <i class="fab fa-discord"></i>
+                      <input
+                        type="text"
+                        id="discordTopicId"
+                        placeholder="ID du topic forum Discord"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn-add" id="addCompanyBtn">
+                  <i class="fas fa-save"></i> CREER L'ENTREPRISE
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="tab-section open" id="subTabListCompanies">
+            <div
+              class="tab-header"
+              onclick="toggleTab('subTabListCompanies')"
+              style="padding: 0.8rem 1.5rem"
+            >
+              <h2 style="font-size: 1.2rem">
+                <i class="fas fa-list"></i> ENTREPRISES ENREGISTREES
+              </h2>
+              <i class="fas fa-chevron-down tab-arrow"></i>
+            </div>
+            <div class="tab-content">
+              <div class="table-responsive">
+                <table id="companiesTable">
+                  <thead>
+                    <tr>
+                      <th>Entreprise</th>
+                      <th>Email</th>
+                      <th>Topic Discord</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="companiesList">
+                    <tr>
+                      <td colspan="5" style="text-align: center">
+                        <div class="loading-spinner"></div>
+                        Chargement des entreprises...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENUS -->
+      <div class="tab-section" id="tabMenus">
+        <div class="tab-header" onclick="toggleTab('tabMenus')">
+          <h2><i class="fas fa-utensils"></i> GESTION DES MENUS</h2>
+          <i class="fas fa-chevron-down tab-arrow"></i>
+        </div>
+        <div class="tab-content">
+          <div class="tab-section open" id="subTabListMenus">
+            <div
+              class="tab-header"
+              onclick="toggleTab('subTabListMenus')"
+              style="padding: 0.8rem 1.5rem"
+            >
+              <h2 style="font-size: 1.2rem">
+                <i class="fas fa-list"></i> MENUS ACTUELS
+              </h2>
+              <i class="fas fa-chevron-down tab-arrow"></i>
+            </div>
+            <div class="tab-content">
+              <div class="table-responsive">
+                <table id="menusTable">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Description</th>
+                      <th>Prix ($)</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="menusList">
+                    <tr>
+                      <td colspan="4" style="text-align: center">
+                        <div class="loading-spinner"></div>
+                        Chargement des menus...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button
+                class="btn-add"
+                id="openAddMenuModal"
+                style="margin-top: 1rem"
+              >
+                <i class="fas fa-plus-circle"></i> AJOUTER UN MENU
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUITS UNITAIRES -->
+      <div class="tab-section" id="tabProduits">
+        <div class="tab-header" onclick="toggleTab('tabProduits')">
+          <h2><i class="fas fa-boxes"></i> GESTION DES PRODUITS UNITAIRES</h2>
+          <i class="fas fa-chevron-down tab-arrow"></i>
+        </div>
+        <div class="tab-content">
+          <div class="tab-section open" id="subTabListProduits">
+            <div
+              class="tab-header"
+              onclick="toggleTab('subTabListProduits')"
+              style="padding: 0.8rem 1.5rem"
+            >
+              <h2 style="font-size: 1.2rem">
+                <i class="fas fa-list"></i> PRODUITS ENREGISTRES
+              </h2>
+              <i class="fas fa-chevron-down tab-arrow"></i>
+            </div>
+            <div class="tab-content">
+              <div class="table-responsive">
+                <table id="produitsTable">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Categorie</th>
+                      <th>Description</th>
+                      <th>Prix ($)</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="produitsList">
+                    <tr>
+                      <td colspan="5" style="text-align: center">
+                        <div class="loading-spinner"></div>
+                        Chargement des produits...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button
+                class="btn-add"
+                id="openAddProduitModal"
+                style="margin-top: 1rem"
+              >
+                <i class="fas fa-plus-circle"></i> AJOUTER UN PRODUIT
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- MODALE MENU -->
+    <div class="modal-overlay" id="menuModal">
+      <div class="modal-container">
+        <button class="modal-close" id="closeMenuModal">
+          <i class="fas fa-times"></i>
+        </button>
+        <h2 class="modal-title" id="menuModalTitle">AJOUTER UN MENU</h2>
+        <form id="menuForm">
+          <input type="hidden" id="menuId" value="" />
+          <div class="form-group">
+            <label for="menuNameInput">Nom du menu</label>
+            <div class="input-container">
+              <i class="fas fa-utensils"></i>
+              <input
+                type="text"
+                id="menuNameInput"
+                placeholder="Ex: Burger Deluxe"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="menuPriceInput">Prix ($)</label>
+            <div class="input-container">
+              <i class="fas fa-dollar-sign"></i>
+              <input
+                type="number"
+                id="menuPriceInput"
+                placeholder="15"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="menuDescInput">Description</label>
+            <div class="input-container">
+              <i class="fas fa-align-left"></i>
+              <textarea
+                id="menuDescInput"
+                placeholder="Description du menu..."
+                required
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-btn-row">
+            <button type="button" id="cancelMenuBtn">
+              <i class="fas fa-times"></i> ANNULER
+            </button>
+            <button type="submit" id="saveMenuBtn">
+              <i class="fas fa-save"></i> ENREGISTRER
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODALE PRODUIT -->
+    <div class="modal-overlay" id="produitModal">
+      <div class="modal-container">
+        <button class="modal-close" id="closeProduitModal">
+          <i class="fas fa-times"></i>
+        </button>
+        <h2 class="modal-title" id="produitModalTitle">AJOUTER UN PRODUIT</h2>
+        <form id="produitForm">
+          <input type="hidden" id="produitId" value="" />
+          <div class="form-group">
+            <label for="produitNameInput">Nom du produit</label>
+            <div class="input-container">
+              <i class="fas fa-tag"></i>
+              <input
+                type="text"
+                id="produitNameInput"
+                placeholder="Ex: Burger Classic"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="produitCategoryInput">Categorie</label>
+            <div class="input-container">
+              <i class="fas fa-layer-group"></i>
+              <select id="produitCategoryInput" required>
+                <option value="">-- Choisir --</option>
+                <option value="plats">Plats</option>
+                <option value="boissons">Boissons</option>
+                <option value="desserts">Desserts</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="produitPriceInput">Prix ($)</label>
+            <div class="input-container">
+              <i class="fas fa-dollar-sign"></i>
+              <input
+                type="number"
+                id="produitPriceInput"
+                placeholder="10"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="produitDescInput">Description</label>
+            <div class="input-container">
+              <i class="fas fa-align-left"></i>
+              <textarea
+                id="produitDescInput"
+                placeholder="Description du produit..."
+                required
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-btn-row">
+            <button type="button" id="cancelProduitBtn">
+              <i class="fas fa-times"></i> ANNULER
+            </button>
+            <button type="submit" id="saveProduitBtn">
+              <i class="fas fa-save"></i> ENREGISTRER
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <div class="copyright">2026 Rex's Diner - Tous droits reserves.</div>
+      </div>
+    </footer>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyDyjqlNqTG557-mWi9FkzJfzbUeOLQIdlQ",
+        authDomain: "rex-commande-v2.firebaseapp.com",
+        projectId: "rex-commande-v2",
+        storageBucket: "rex-commande-v2.firebasestorage.app",
+        messagingSenderId: "1068816796583",
+        appId: "1:1068816796583:web:480ed3b69c1bd636488482",
+      };
+
+      const app = firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      const notification = document.getElementById("notification");
+      const adminInfo = document.getElementById("adminInfo");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      const ADMIN_EMAIL = "Admin@rex.com";
+
+      function toggleTab(tabId) {
+        const tab = document.getElementById(tabId);
+        if (tab) {
+          tab.classList.toggle("open");
+        }
+      }
+
+      window.toggleTab = toggleTab;
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        const userEmail = user.email ? user.email.toLowerCase().trim() : "";
+        const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+
+        if (userEmail === adminEmailLower) {
+          adminInfo.innerHTML =
+            '<i class="fas fa-check-circle" style="color: #00ff00;"></i> Connecte en tant qu\'administrateur: ' +
+            user.email;
+          await loadCompanies();
+          await loadMenus();
+          await loadProduits();
+        } else {
+          adminInfo.innerHTML =
+            '<i class="fas fa-exclamation-triangle" style="color: var(--neon-red);"></i> Acces non autorise - Redirection...';
+          setTimeout(() => {
+            window.location.href = "commande.html";
+          }, 2000);
+        }
+      });
+
+      function showNotification(message, type) {
+        notification.textContent = message;
+        notification.className = "message " + type;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 3000);
+      }
+
+      // ==================== ENTREPRISES ====================
+      async function loadCompanies() {
+        const companiesList = document.getElementById("companiesList");
+        try {
+          const snapshot = await db.collection("entreprises").get();
+
+          if (snapshot.empty) {
+            companiesList.innerHTML =
+              '<tr><td colspan="5" style="text-align: center; padding: 2rem;"><i class="fas fa-info-circle" style="color: var(--neon-cyan); font-size: 2rem; margin-bottom: 1rem;"></i><br>Aucune entreprise enregistree</td></tr>';
+            return;
+          }
+
+          let html = "";
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const date = data.createdAt
+              ? new Date(data.createdAt.toDate()).toLocaleDateString("fr-FR")
+              : "N/A";
+            const topicId = data.discordTopicId || "Non defini";
+
+            html +=
+              "<tr>" +
+              "<td><strong>" +
+              (data.companyName || "N/A") +
+              "</strong></td>" +
+              "<td>" +
+              (data.email || "N/A") +
+              "</td>" +
+              '<td><span class="topic-id-badge" title="' +
+              topicId +
+              '"><i class="fab fa-discord"></i> ' +
+              (topicId.length > 18
+                ? topicId.substring(0, 15) + "..."
+                : topicId) +
+              "</span></td>" +
+              "<td>" +
+              date +
+              "</td>" +
+              "<td>" +
+              '<button class="btn-edit" onclick="editCompanyTopic(\'' +
+              doc.id +
+              "', '" +
+              topicId.replace(/'/g, "\\'") +
+              '\')"><i class="fas fa-edit"></i> Modifier Topic</button> ' +
+              '<button class="btn-delete" onclick="deleteCompany(\'' +
+              doc.id +
+              '\')"><i class="fas fa-trash"></i> Supprimer</button>' +
+              "</td></tr>";
+          });
+
+          companiesList.innerHTML = html;
+        } catch (error) {
+          console.error("Erreur chargement entreprises:", error);
+          showNotification(
+            "Erreur lors du chargement des entreprises",
+            "error",
+          );
+        }
+      }
+
+      const addCompanyForm = document.getElementById("addCompanyForm");
+      if (addCompanyForm) {
+        addCompanyForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const companyName = document
+            .getElementById("companyName")
+            .value.trim();
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          const discordTopicId = document
+            .getElementById("discordTopicId")
+            .value.trim();
+
+          if (!companyName || !email || !password || !discordTopicId) {
+            showNotification("Veuillez remplir tous les champs", "error");
+            return;
+          }
+
+          const addBtn = document.getElementById("addCompanyBtn");
+          addBtn.disabled = true;
+          addBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> CREATION...';
+
+          try {
+            let secondaryApp = null;
+            let secondaryAuth = null;
+
+            try {
+              secondaryApp = firebase.initializeApp(
+                firebaseConfig,
+                "temp_" + Date.now(),
+              );
+              secondaryAuth = secondaryApp.auth();
+            } catch (initError) {
+              console.error("Erreur init app secondaire:", initError);
+            }
+
+            let user = null;
+
+            if (secondaryAuth) {
+              const userCredential =
+                await secondaryAuth.createUserWithEmailAndPassword(
+                  email,
+                  password,
+                );
+              user = userCredential.user;
+              await secondaryAuth.signOut();
+            } else {
+              const userCredential = await auth.createUserWithEmailAndPassword(
+                email,
+                password,
+              );
+              user = userCredential.user;
+              await auth.signOut();
+              await auth.signInWithEmailAndPassword(
+                ADMIN_EMAIL,
+                prompt("Mot de passe admin pour reconnexion :"),
+              );
+            }
+
+            await db.collection("entreprises").doc(user.uid).set({
+              companyName: companyName,
+              email: email,
+              discordTopicId: discordTopicId,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              uid: user.uid,
+            });
+
+            if (secondaryApp) {
+              try {
+                await secondaryApp.delete();
+              } catch (deleteError) {
+                console.error(
+                  "Erreur suppression app secondaire:",
+                  deleteError,
+                );
+              }
+            }
+
+            showNotification("Entreprise creee avec succes !", "success");
+            addCompanyForm.reset();
+            loadCompanies();
+          } catch (error) {
+            console.error("Erreur creation:", error);
+            let errorMessage = "Erreur lors de la creation";
+            if (error.code === "auth/email-already-in-use") {
+              errorMessage = "Cet email est deja utilise";
+            } else if (error.code === "auth/weak-password") {
+              errorMessage =
+                "Le mot de passe doit contenir au moins 6 caracteres";
+            }
+            showNotification(errorMessage, "error");
+          } finally {
+            addBtn.disabled = false;
+            addBtn.innerHTML =
+              '<i class="fas fa-save"></i> CREER L\'ENTREPRISE';
+          }
+        });
+      }
+
+      window.editCompanyTopic = async (companyId, currentTopicId) => {
+        const newTopicId = prompt(
+          "Nouvel ID du topic forum Discord :",
+          currentTopicId,
+        );
+        if (newTopicId === null || newTopicId.trim() === "") return;
+        try {
+          await db
+            .collection("entreprises")
+            .doc(companyId)
+            .update({ discordTopicId: newTopicId.trim() });
+          showNotification("Topic Discord mis a jour !", "success");
+          loadCompanies();
+        } catch (error) {
+          console.error("Erreur mise a jour topic:", error);
+          showNotification("Erreur lors de la mise a jour", "error");
+        }
+      };
+
+      window.deleteCompany = async (companyId) => {
+        if (!confirm("Etes-vous sur de vouloir supprimer cette entreprise ?"))
+          return;
+        try {
+          await db.collection("entreprises").doc(companyId).delete();
+          showNotification("Entreprise supprimee avec succes", "success");
+          loadCompanies();
+        } catch (error) {
+          console.error("Erreur suppression:", error);
+          showNotification("Erreur lors de la suppression", "error");
+        }
+      };
+
+      // ==================== MENUS ====================
+      const menuModal = document.getElementById("menuModal");
+      const menuForm = document.getElementById("menuForm");
+      const menuModalTitle = document.getElementById("menuModalTitle");
+      const menuIdInput = document.getElementById("menuId");
+      const menuNameInput = document.getElementById("menuNameInput");
+      const menuPriceInput = document.getElementById("menuPriceInput");
+      const menuDescInput = document.getElementById("menuDescInput");
+
+      function openMenuModal(menuData = null) {
+        if (menuData) {
+          menuModalTitle.innerHTML =
+            '<i class="fas fa-edit"></i> MODIFIER LE MENU';
+          menuIdInput.value = menuData.id;
+          menuNameInput.value = menuData.name || "";
+          menuPriceInput.value = menuData.price || 0;
+          menuDescInput.value = menuData.description || "";
+        } else {
+          menuModalTitle.innerHTML =
+            '<i class="fas fa-plus-circle"></i> AJOUTER UN MENU';
+          menuForm.reset();
+          menuIdInput.value = "";
+        }
+        menuModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeMenuModal() {
+        menuModal.style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+
+      document
+        .getElementById("openAddMenuModal")
+        .addEventListener("click", () => openMenuModal());
+      document
+        .getElementById("closeMenuModal")
+        .addEventListener("click", closeMenuModal);
+      document
+        .getElementById("cancelMenuBtn")
+        .addEventListener("click", closeMenuModal);
+      menuModal.addEventListener("click", (e) => {
+        if (e.target === menuModal) closeMenuModal();
+      });
+
+      menuForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const menuId = menuIdInput.value;
+        const menuData = {
+          name: menuNameInput.value.trim(),
+          price: parseFloat(menuPriceInput.value) || 0,
+          description: menuDescInput.value.trim(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        const saveBtn = document.getElementById("saveMenuBtn");
+        saveBtn.disabled = true;
+        saveBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> ENREGISTREMENT...';
+        try {
+          if (menuId) {
+            await db.collection("menus").doc(menuId).update(menuData);
+            showNotification("Menu modifie avec succes !", "success");
+          } else {
+            menuData.createdAt =
+              firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("menus").add(menuData);
+            showNotification("Menu ajoute avec succes !", "success");
+          }
+          closeMenuModal();
+          loadMenus();
+        } catch (error) {
+          console.error("Erreur sauvegarde menu:", error);
+          showNotification("Erreur lors de l'enregistrement", "error");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save"></i> ENREGISTRER';
+        }
+      });
+
+      async function loadMenus() {
+        const menusList = document.getElementById("menusList");
+        try {
+          const snapshot = await db
+            .collection("menus")
+            .orderBy("createdAt", "desc")
+            .get();
+          if (snapshot.empty) {
+            menusList.innerHTML =
+              '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fas fa-info-circle" style="color: var(--neon-cyan); font-size: 2rem; margin-bottom: 1rem;"></i><br>Aucun menu enregistre</td></tr>';
+            return;
+          }
+          let html = "";
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            html +=
+              "<tr>" +
+              "<td><strong>" +
+              (data.name || "N/A") +
+              "</strong></td>" +
+              '<td><span class="text-ellipsis">' +
+              (data.description || "N/A") +
+              "</span></td>" +
+              '<td><strong style="color: var(--neon-cyan); font-size: 1.1rem;">' +
+              data.price +
+              "$</strong></td>" +
+              "<td>" +
+              '<button class="btn-edit" onclick=\'editMenu("' +
+              doc.id +
+              '", ' +
+              JSON.stringify(data).replace(/'/g, "&#39;") +
+              ')\'><i class="fas fa-edit"></i> Modifier</button> ' +
+              '<button class="btn-delete" onclick="deleteMenu(\'' +
+              doc.id +
+              '\')"><i class="fas fa-trash"></i> Supprimer</button>' +
+              "</td></tr>";
+          });
+          menusList.innerHTML = html;
+        } catch (error) {
+          console.error("Erreur chargement menus:", error);
+          showNotification("Erreur lors du chargement des menus", "error");
+        }
+      }
+
+      window.editMenu = (menuId, menuData) => {
+        openMenuModal({ id: menuId, ...menuData });
+      };
+
+      window.deleteMenu = async (menuId) => {
+        if (!confirm("Etes-vous sur de vouloir supprimer ce menu ?")) return;
+        try {
+          await db.collection("menus").doc(menuId).delete();
+          showNotification("Menu supprime avec succes", "success");
+          loadMenus();
+        } catch (error) {
+          console.error("Erreur suppression menu:", error);
+          showNotification("Erreur lors de la suppression", "error");
+        }
+      };
+
+      // ==================== PRODUITS UNITAIRES ====================
+      const produitModal = document.getElementById("produitModal");
+      const produitForm = document.getElementById("produitForm");
+      const produitModalTitle = document.getElementById("produitModalTitle");
+      const produitIdInput = document.getElementById("produitId");
+      const produitNameInput = document.getElementById("produitNameInput");
+      const produitCategoryInput = document.getElementById(
+        "produitCategoryInput",
+      );
+      const produitPriceInput = document.getElementById("produitPriceInput");
+      const produitDescInput = document.getElementById("produitDescInput");
+
+      function openProduitModal(produitData = null) {
+        if (produitData) {
+          produitModalTitle.innerHTML =
+            '<i class="fas fa-edit"></i> MODIFIER LE PRODUIT';
+          produitIdInput.value = produitData.id;
+          produitNameInput.value = produitData.name || "";
+          produitCategoryInput.value = produitData.category || "";
+          produitPriceInput.value = produitData.price || 0;
+          produitDescInput.value = produitData.description || "";
+        } else {
+          produitModalTitle.innerHTML =
+            '<i class="fas fa-plus-circle"></i> AJOUTER UN PRODUIT';
+          produitForm.reset();
+          produitIdInput.value = "";
+        }
+        produitModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeProduitModal() {
+        produitModal.style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+
+      document
+        .getElementById("openAddProduitModal")
+        .addEventListener("click", () => openProduitModal());
+      document
+        .getElementById("closeProduitModal")
+        .addEventListener("click", closeProduitModal);
+      document
+        .getElementById("cancelProduitBtn")
+        .addEventListener("click", closeProduitModal);
+      produitModal.addEventListener("click", (e) => {
+        if (e.target === produitModal) closeProduitModal();
+      });
+
+      produitForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const produitId = produitIdInput.value;
+        const produitData = {
+          name: produitNameInput.value.trim(),
+          category: produitCategoryInput.value,
+          price: parseFloat(produitPriceInput.value) || 0,
+          description: produitDescInput.value.trim(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        if (!produitData.category) {
+          showNotification("Veuillez choisir une categorie", "error");
+          return;
+        }
+        const saveBtn = document.getElementById("saveProduitBtn");
+        saveBtn.disabled = true;
+        saveBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> ENREGISTREMENT...';
+        try {
+          if (produitId) {
+            await db.collection("produits").doc(produitId).update(produitData);
+            showNotification("Produit modifie avec succes !", "success");
+          } else {
+            produitData.createdAt =
+              firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("produits").add(produitData);
+            showNotification("Produit ajoute avec succes !", "success");
+          }
+          closeProduitModal();
+          loadProduits();
+        } catch (error) {
+          console.error("Erreur sauvegarde produit:", error);
+          showNotification("Erreur lors de l'enregistrement", "error");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save"></i> ENREGISTRER';
+        }
+      });
+
+      async function loadProduits() {
+        const produitsList = document.getElementById("produitsList");
+        try {
+          const snapshot = await db
+            .collection("produits")
+            .orderBy("createdAt", "desc")
+            .get();
+          if (snapshot.empty) {
+            produitsList.innerHTML =
+              '<tr><td colspan="5" style="text-align: center; padding: 2rem;"><i class="fas fa-info-circle" style="color: var(--neon-cyan); font-size: 2rem; margin-bottom: 1rem;"></i><br>Aucun produit enregistre</td></tr>';
+            return;
+          }
+          const categoryLabels = {
+            plats: "Plats",
+            boissons: "Boissons",
+            desserts: "Desserts",
+          };
+          let html = "";
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const cat = data.category || "plats";
+            const label = categoryLabels[cat] || cat;
+            html +=
+              "<tr>" +
+              "<td><strong>" +
+              (data.name || "N/A") +
+              "</strong></td>" +
+              "<td>" +
+              label +
+              "</td>" +
+              '<td><span class="text-ellipsis">' +
+              (data.description || "N/A") +
+              "</span></td>" +
+              '<td><strong style="color: var(--neon-cyan); font-size: 1.1rem;">' +
+              data.price +
+              "$</strong></td>" +
+              "<td>" +
+              '<button class="btn-edit" onclick=\'editProduit("' +
+              doc.id +
+              '", ' +
+              JSON.stringify(data).replace(/'/g, "&#39;") +
+              ')\'><i class="fas fa-edit"></i> Modifier</button> ' +
+              '<button class="btn-delete" onclick="deleteProduit(\'' +
+              doc.id +
+              '\')"><i class="fas fa-trash"></i> Supprimer</button>' +
+              "</td></tr>";
+          });
+          produitsList.innerHTML = html;
+        } catch (error) {
+          console.error("Erreur chargement produits:", error);
+          showNotification("Erreur lors du chargement des produits", "error");
+        }
+      }
+
+      window.editProduit = (produitId, produitData) => {
+        openProduitModal({ id: produitId, ...produitData });
+      };
+
+      window.deleteProduit = async (produitId) => {
+        if (!confirm("Etes-vous sur de vouloir supprimer ce produit ?")) return;
+        try {
+          await db.collection("produits").doc(produitId).delete();
+          showNotification("Produit supprime avec succes", "success");
+          loadProduits();
+        } catch (error) {
+          console.error("Erreur suppression produit:", error);
+          showNotification("Erreur lors de la suppression", "error");
+        }
+      };
+
+      // ==================== LOGOUT ====================
+      async function handleLogout() {
+        try {
+          await auth.signOut();
+          window.location.href = "index.html";
+        } catch (error) {
+          console.error("Erreur deconnexion:", error);
+          showNotification("Erreur lors de la deconnexion", "error");
+        }
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          handleLogout();
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          if (menuModal.style.display === "flex") closeMenuModal();
+          if (produitModal.style.display === "flex") closeProduitModal();
+        }
+      });
+    </script>
+  </body>
+</html>
