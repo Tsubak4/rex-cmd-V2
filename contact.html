@@ -847,8 +847,190 @@
       </div>
     </footer>
 
-    <script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+ <script>
+      const DISCORD_WEBHOOK_URL =
+        "https://discord.com/api/webhooks/1500915890395418815/ZRiylZPuP0tjGOozn5TDipLUY7DZ53zE5_eRNqh_iTupwY08uOk3VEbL8xPW5DcVrFeb";
+      const ROLE_ID = "1498593742196838511";
+      const COOLDOWN_TIME = 6 * 60 * 60 * 1000;
+      const STORAGE_KEY = "rexsdiner_contact_cooldown";
+
+      const contactForm = document.getElementById("contactForm");
+      const submitBtn = document.getElementById("submitBtn");
+      const notification = document.getElementById("notification");
+      const successModal = document.getElementById("successModal");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+
+      function checkCooldown() {
+        const lastSubmit = localStorage.getItem(STORAGE_KEY);
+        if (!lastSubmit) return false;
+        const timePassed = Date.now() - parseInt(lastSubmit);
+        return timePassed < COOLDOWN_TIME;
+      }
+
+      function getRemainingTime() {
+        const lastSubmit = localStorage.getItem(STORAGE_KEY);
+        if (!lastSubmit) return 0;
+        const timePassed = Date.now() - parseInt(lastSubmit);
+        const remaining = COOLDOWN_TIME - timePassed;
+        return remaining > 0 ? remaining : 0;
+      }
+
+      function updateCooldownButton() {
+        const remaining = getRemainingTime();
+
+        if (remaining > 0) {
+          submitBtn.disabled = true;
+          const hours = Math.floor(remaining / (60 * 60 * 1000));
+          const minutes = Math.floor(
+            (remaining % (60 * 60 * 1000)) / (60 * 1000),
+          );
+          submitBtn.innerHTML = `<i class="fas fa-clock"></i> ${hours}h ${minutes}m`;
+
+          setTimeout(updateCooldownButton, 1000);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ENVOYER';
+        }
+      }
+
+      function showNotification(message, type) {
+        notification.textContent = message;
+        notification.className = "message " + type;
+        notification.style.display = "block";
+
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 3000);
+      }
+
+      function showSuccessModal() {
+        successModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeSuccessModal() {
+        successModal.style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+
+      function formatDiscordEmbed(formData) {
+        const typeLabels = {
+          reservation: "📅 Réservation",
+          information: "ℹ️ Information",
+          reclamation: "⚠️ Réclamation",
+          autre: "❓ Autre",
+        };
+
+        return {
+          content: `<@&${ROLE_ID}> 🍔 **NOUVEAU CONTACT - REX'S DINER** 🍟`,
+          embeds: [
+            {
+              title: "📨 Nouveau message",
+              color: 0xff0055,
+              fields: [
+                {
+                  name: "👤 Nom complet",
+                  value: `${formData.prenom} ${formData.nom}`,
+                  inline: true,
+                },
+                {
+                  name: "📞 Téléphone",
+                  value: formData.telephone,
+                  inline: true,
+                },
+                { name: "🏷️ Sujet", value: formData.sujet, inline: false },
+                {
+                  name: "📋 Type",
+                  value: typeLabels[formData.demandeType],
+                  inline: false,
+                },
+                { name: "💬 Message", value: formData.message, inline: false },
+              ],
+              footer: { text: "Rex's Diner" },
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        };
+      }
+
+      contactForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (checkCooldown()) {
+          showNotification(
+            "Veuillez attendre 6h entre chaque message",
+            "error",
+          );
+          updateCooldownButton();
+          return;
+        }
+
+        const formData = {
+          nom: document.getElementById("nom").value.trim(),
+          prenom: document.getElementById("prenom").value.trim(),
+          telephone: document.getElementById("telephone").value.trim(),
+          sujet: document.getElementById("sujet").value.trim(),
+          message: document.getElementById("message").value.trim(),
+          demandeType: document.querySelector(
+            'input[name="demandeType"]:checked',
+          ).value,
+        };
+
+        if (
+          !formData.nom ||
+          !formData.prenom ||
+          !formData.telephone ||
+          !formData.sujet ||
+          !formData.message
+        ) {
+          showNotification("Tous les champs sont requis", "error");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVOI...';
+
+        try {
+          const discordPayload = formatDiscordEmbed(formData);
+
+          const response = await fetch(DISCORD_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(discordPayload),
+          });
+
+          if (!response.ok) throw new Error("Erreur Discord");
+
+          localStorage.setItem(STORAGE_KEY, Date.now().toString());
+
+          contactForm.reset();
+          showSuccessModal();
+        } catch (error) {
+          console.error("Erreur:", error);
+          showNotification("Erreur lors de l'envoi", "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ENVOYER';
+        }
+      });
+
+      closeModalBtn.addEventListener("click", closeSuccessModal);
+
+      successModal.addEventListener("click", function (e) {
+        if (e.target === successModal) {
+          closeSuccessModal();
+        }
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && successModal.style.display === "flex") {
+          closeSuccessModal();
+        }
+      });
+
+      if (checkCooldown()) {
+        updateCooldownButton();
+      }
     </script>
   </body>
 </html>
